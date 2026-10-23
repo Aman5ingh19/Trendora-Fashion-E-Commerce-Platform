@@ -1,0 +1,22 @@
+<div class="trendora-app">
+  <!-- Sticky Header / Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Router Outlet -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Global Footer -->
+  <app-footer></app-footer>
+
+  <!-- Floating Toast Notifications -->
+  <div class="toast-container" aria-live="polite">
+    @for (toast of toastService.toasts(); track toast.id) {
+      <div class="toast" [ngClass]="toast.type">
+        <span class="material-symbols-outlined">{{ toast.icon }}</span>
+        <span>{{ toast.text }}</span>
+      </div>
+    }
+  </div>
+</div>

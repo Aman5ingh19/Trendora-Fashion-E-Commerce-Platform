@@ -1,0 +1,382 @@
+<div class="plp-root">
+  <div class="trendora-container">
+    
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <a routerLink="/">Home</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>Clothing & Lifestyle</span>
+      @if (selectedCategory()) {
+        <span class="breadcrumb-sep">/</span>
+        <span class="active-crumb">{{ selectedCategory() }}</span>
+      }
+      @if (selectedGender()) {
+        <span class="breadcrumb-sep">/</span>
+        <span class="active-crumb">{{ selectedGender() }}</span>
+      }
+    </nav>
+
+    <!-- Page Title & Header Info -->
+    <div class="plp-header-bar">
+      <div class="header-titles">
+        <h1 class="category-heading">
+          {{ selectedCategory() || selectedGender() || (searchQuery() ? 'Search: "' + searchQuery() + '"' : 'All Fashion Collections') }}
+        </h1>
+        <span class="items-count">- {{ totalProducts() }} items</span>
+      </div>
+
+      <!-- Desktop Sort Bar & Mobile Filter Trigger -->
+      <div class="header-controls">
+        <button class="mobile-filter-btn" (click)="mobileFilterOpen.set(true)">
+          <span class="material-symbols-outlined">tune</span>
+          FILTERS ({{ activeFiltersCount }})
+        </button>
+
+        <div class="sort-selector">
+          <label for="sort-dropdown">Sort by:</label>
+          <select 
+            id="sort-dropdown"
+            [ngModel]="selectedSort()" 
+            (ngModelChange)="onSortChange($event)"
+            class="sort-select"
+          >
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Filter Tags Ribbon -->
+    @if (activeFiltersCount > 0) {
+      <div class="active-filters-ribbon">
+        <span class="active-filters-label">Active Filters:</span>
+        
+        @if (selectedCategory()) {
+          <span class="filter-pill">
+            Category: {{ selectedCategory() }}
+            <button (click)="removeFilter('category')" aria-label="Remove category filter">✕</button>
+          </span>
+        }
+
+        @if (selectedGender()) {
+          <span class="filter-pill">
+            Gender: {{ selectedGender() }}
+            <button (click)="removeFilter('gender')" aria-label="Remove gender filter">✕</button>
+          </span>
+        }
+
+        @for (brand of selectedBrands(); track brand) {
+          <span class="filter-pill">
+            Brand: {{ brand }}
+            <button (click)="removeFilter('brand', brand)" aria-label="Remove brand filter">✕</button>
+          </span>
+        }
+
+        @for (sz of selectedSizes(); track sz) {
+          <span class="filter-pill">
+            Size: {{ sz }}
+            <button (click)="removeFilter('size', sz)" aria-label="Remove size filter">✕</button>
+          </span>
+        }
+
+        @if (selectedPriceRange()) {
+          <span class="filter-pill">
+            Price: {{ selectedPriceRange() }}
+            <button (click)="removeFilter('price')" aria-label="Remove price filter">✕</button>
+          </span>
+        }
+
+        @if (selectedDiscount() > 0) {
+          <span class="filter-pill">
+            Min {{ selectedDiscount() }}% OFF
+            <button (click)="removeFilter('discount')" aria-label="Remove discount filter">✕</button>
+          </span>
+        }
+
+        <button class="clear-all-btn" (click)="clearAllFilters()">
+          CLEAR ALL
+        </button>
+      </div>
+    }
+
+    <!-- Main Two-Column Layout -->
+    <div class="plp-layout">
+
+      <!-- LEFT: Sticky Filter Sidebar (Desktop) -->
+      <aside class="filter-sidebar desktop-filter">
+        <div class="sidebar-header">
+          <strong>FILTERS</strong>
+          @if (activeFiltersCount > 0) {
+            <button class="sidebar-clear-btn" (click)="clearAllFilters()">CLEAR ALL</button>
+          }
+        </div>
+
+        <!-- Gender Filter -->
+        <div class="filter-group">
+          <div class="group-title">GENDER</div>
+          <div class="radio-options">
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="gender" 
+                [checked]="selectedGender() === ''" 
+                (change)="setGender('')" 
+              />
+              <span>All Genders</span>
+            </label>
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="gender" 
+                [checked]="selectedGender() === 'Men'" 
+                (change)="setGender('Men')" 
+              />
+              <span>Men</span>
+            </label>
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="gender" 
+                [checked]="selectedGender() === 'Women'" 
+                (change)="setGender('Women')" 
+              />
+              <span>Women</span>
+            </label>
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="gender" 
+                [checked]="selectedGender() === 'Kids'" 
+                (change)="setGender('Kids')" 
+              />
+              <span>Kids</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Brands Filter (Dynamic from API Facets) -->
+        <div class="filter-group">
+          <div class="group-title">BRANDS</div>
+          <div class="checkbox-options scrollable-list">
+            @for (brand of filterFacets().availableBrands; track brand) {
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="selectedBrands().includes(brand)" 
+                  (change)="toggleBrand(brand)" 
+                />
+                <span class="brand-name-text">{{ brand }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="filter-group">
+          <div class="group-title">PRICE</div>
+          <div class="radio-options">
+            @for (opt of priceOptions; track opt.label) {
+              <label class="radio-label">
+                <input 
+                  type="radio" 
+                  name="priceRange" 
+                  [checked]="selectedPriceRange() === opt.label || (opt.label === 'All Prices' && !selectedPriceRange())" 
+                  (change)="setPriceRange(opt.label === 'All Prices' ? '' : opt.label)" 
+                />
+                <span>{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Sizes Filter (Dynamic from API Facets) -->
+        <div class="filter-group">
+          <div class="group-title">SIZES</div>
+          <div class="size-pill-grid">
+            @for (sz of filterFacets().availableSizes; track sz) {
+              <button 
+                class="size-filter-pill" 
+                [class.active]="selectedSizes().includes(sz)"
+                (click)="toggleSize(sz)"
+              >
+                {{ sz }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Discount Filter -->
+        <div class="filter-group">
+          <div class="group-title">DISCOUNT RANGE</div>
+          <div class="radio-options">
+            @for (d of discountOptions; track d.label) {
+              <label class="radio-label">
+                <input 
+                  type="radio" 
+                  name="discount" 
+                  [checked]="selectedDiscount() === d.value" 
+                  (change)="setDiscount(d.value)" 
+                />
+                <span>{{ d.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- RIGHT: Products Grid Section -->
+      <section class="products-content">
+        
+        <!-- Loading Skeleton State -->
+        @if (isLoading()) {
+          <div class="products-grid">
+            @for (n of [1,2,3,4,5,6,7,8]; track n) {
+              <div class="product-skeleton-card">
+                <div class="skeleton skeleton-media"></div>
+                <div class="skeleton-info">
+                  <div class="skeleton skeleton-brand"></div>
+                  <div class="skeleton skeleton-title"></div>
+                  <div class="skeleton skeleton-price"></div>
+                </div>
+              </div>
+            }
+          </div>
+        } 
+        
+        <!-- Empty State -->
+        @else if (products().length === 0) {
+          <div class="empty-products-state">
+            <span class="material-symbols-outlined empty-icon">sentiment_dissatisfied</span>
+            <h3>No products found</h3>
+            <p>We couldn't find any fashion items matching your selected filters or search query.</p>
+            <button class="btn btn-primary" (click)="clearAllFilters()">
+              CLEAR ALL FILTERS
+            </button>
+          </div>
+        } 
+        
+        <!-- Live Products Grid -->
+        @else {
+          <div class="products-grid">
+            @for (prod of products(); track prod._id) {
+              <app-product-card [product]="prod"></app-product-card>
+            }
+          </div>
+
+          <!-- Pagination Navigation -->
+          @if (totalPages() > 1) {
+            <div class="pagination-bar">
+              <button 
+                class="page-btn prev-btn" 
+                [disabled]="currentPage() === 1"
+                (click)="changePage(currentPage() - 1)"
+              >
+                <span class="material-symbols-outlined">chevron_left</span> PREVIOUS
+              </button>
+
+              <div class="page-numbers">
+                @for (p of [].constructor(totalPages()); track $index; let idx = $index) {
+                  <button 
+                    class="page-number-btn" 
+                    [class.active]="currentPage() === (idx + 1)"
+                    (click)="changePage(idx + 1)"
+                  >
+                    {{ idx + 1 }}
+                  </button>
+                }
+              </div>
+
+              <button 
+                class="page-btn next-btn" 
+                [disabled]="currentPage() === totalPages()"
+                (click)="changePage(currentPage() + 1)"
+              >
+                NEXT <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          }
+        }
+
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- Mobile Filter Drawer -->
+  @if (mobileFilterOpen()) {
+    <div class="mobile-drawer-overlay" (click)="mobileFilterOpen.set(false)"></div>
+    <div class="mobile-filter-drawer">
+      <div class="drawer-header">
+        <strong>FILTERS</strong>
+        <button class="close-btn" (click)="mobileFilterOpen.set(false)">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Gender Filter in mobile -->
+        <div class="filter-group">
+          <div class="group-title">GENDER</div>
+          <div class="radio-options">
+            <label class="radio-label">
+              <input type="radio" name="m-gender" [checked]="selectedGender() === ''" (change)="setGender('')" />
+              <span>All Genders</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="m-gender" [checked]="selectedGender() === 'Men'" (change)="setGender('Men')" />
+              <span>Men</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="m-gender" [checked]="selectedGender() === 'Women'" (change)="setGender('Women')" />
+              <span>Women</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Brands in mobile -->
+        <div class="filter-group">
+          <div class="group-title">BRANDS</div>
+          <div class="checkbox-options scrollable-list">
+            @for (brand of filterFacets().availableBrands; track brand) {
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="selectedBrands().includes(brand)" 
+                  (change)="toggleBrand(brand)" 
+                />
+                <span>{{ brand }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Price in mobile -->
+        <div class="filter-group">
+          <div class="group-title">PRICE</div>
+          <div class="radio-options">
+            @for (opt of priceOptions; track opt.label) {
+              <label class="radio-label">
+                <input 
+                  type="radio" 
+                  name="m-priceRange" 
+                  [checked]="selectedPriceRange() === opt.label || (opt.label === 'All Prices' && !selectedPriceRange())" 
+                  (change)="setPriceRange(opt.label === 'All Prices' ? '' : opt.label)" 
+                />
+                <span>{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn btn-outline" (click)="clearAllFilters(); mobileFilterOpen.set(false)">CLEAR ALL</button>
+        <button class="btn btn-primary" (click)="mobileFilterOpen.set(false)">APPLY FILTERS</button>
+      </div>
+    </div>
+  }
+</div>

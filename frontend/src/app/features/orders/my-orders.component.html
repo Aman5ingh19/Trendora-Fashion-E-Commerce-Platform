@@ -1,0 +1,157 @@
+<div class="orders-page">
+  <div class="orders-container">
+    
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">Home</a>
+      <span class="sep">/</span>
+      <span>My Account</span>
+      <span class="sep">/</span>
+      <span class="current">My Orders</span>
+    </nav>
+
+    <div class="page-header">
+      <div class="header-titles">
+        <h1 class="page-title">My Orders</h1>
+        @if (!isLoading()) {
+          <span class="order-count-chip">{{ orders().length }} {{ orders().length === 1 ? 'order' : 'orders' }} placed</span>
+        }
+      </div>
+      <a routerLink="/products" class="continue-shopping-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Continue Shopping
+      </a>
+    </div>
+
+    <!-- Loading Shimmer State -->
+    @if (isLoading()) {
+      <div class="orders-skeleton-list">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="order-skeleton-card">
+            <div class="sk-top">
+              <div class="sk-line sk-w30"></div>
+              <div class="sk-line sk-w20"></div>
+            </div>
+            <div class="sk-body">
+              <div class="sk-thumb"></div>
+              <div class="sk-lines">
+                <div class="sk-line sk-w50"></div>
+                <div class="sk-line sk-w30"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (orders().length === 0) {
+      <!-- Empty Orders State -->
+      <div class="empty-orders-view">
+        <div class="empty-icon-wrap">
+          <span class="material-symbols-outlined">inventory_2</span>
+        </div>
+        <h2>You haven't placed any orders yet</h2>
+        <p>Explore thousands of the latest runway fashion, ethnic wear, footwear, and accessories.</p>
+        <a routerLink="/products" class="btn btn-primary btn-large">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          Start Shopping
+        </a>
+      </div>
+    } @else {
+      <!-- Orders List -->
+      <div class="orders-list">
+        @for (order of orders(); track order._id) {
+          <div class="order-card">
+            
+            <!-- Order Header -->
+            <div class="order-header">
+              <div class="header-left">
+                <div class="order-meta">
+                  <span class="meta-label">ORDER ID</span>
+                  <span class="meta-val mono">#{{ order._id.slice(-8).toUpperCase() }}</span>
+                </div>
+                <div class="order-meta">
+                  <span class="meta-label">PLACED ON</span>
+                  <span class="meta-val">{{ order.createdAt | date:'mediumDate' }}</span>
+                </div>
+                <div class="order-meta">
+                  <span class="meta-label">TOTAL AMOUNT</span>
+                  <span class="meta-val price">₹{{ order.pricing.total.toLocaleString('en-IN') }}</span>
+                </div>
+              </div>
+
+              <div class="header-right">
+                <span class="status-badge" [ngClass]="getStatusClass(order.orderStatus)">
+                  <span class="status-dot"></span>
+                  {{ order.orderStatus }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Order Items Preview -->
+            <div class="order-items-list">
+              @for (item of order.orderItems; track (item._id || $index)) {
+                <div class="item-row">
+                  <div class="item-img-wrap">
+                    <img 
+                      [src]="item.image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&auto=format&fit=crop&q=80'" 
+                      [alt]="item.name" 
+                    />
+                  </div>
+                  <div class="item-info">
+                    <h4 class="item-brand">{{ item.brand }}</h4>
+                    <p class="item-name">{{ item.name }}</p>
+                    <div class="item-specs">
+                      <span class="spec-chip">Size: <strong>{{ item.size }}</strong></span>
+                      <span class="spec-divider">·</span>
+                      <span class="spec-chip">Qty: <strong>{{ item.quantity }}</strong></span>
+                      <span class="spec-divider">·</span>
+                      <span class="spec-chip">Price: <strong>₹{{ item.price.toLocaleString('en-IN') }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Order Footer & Actions -->
+            <div class="order-footer">
+              <div class="footer-status-msg">
+                @if (order.orderStatus === 'Delivered') {
+                  <span class="material-symbols-outlined success-icon">verified</span>
+                  <span>Delivered on {{ (order.updatedAt || order.createdAt) | date:'mediumDate' }}</span>
+                } @else if (order.orderStatus === 'Cancelled') {
+                  <span class="material-symbols-outlined cancelled-icon">cancel</span>
+                  <span>Order cancelled. Refund or stock restored.</span>
+                } @else {
+                  <span class="material-symbols-outlined pending-icon">local_shipping</span>
+                  <span>Expected Delivery: <strong>{{ order.estimatedDeliveryDate ? (order.estimatedDeliveryDate | date:'mediumDate') : 'Within 4-5 business days' }}</strong></span>
+                }
+              </div>
+
+              <div class="footer-actions">
+                @if (canCancel(order.orderStatus)) {
+                  <button 
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="cancelOrder(order._id, $event)"
+                    [disabled]="cancellingOrderId() === order._id"
+                  >
+                    @if (cancellingOrderId() === order._id) {
+                      Cancelling...
+                    } @else {
+                      Cancel Order
+                    }
+                  </button>
+                }
+
+                <a [routerLink]="['/orders', order._id]" class="btn btn-secondary btn-sm">
+                  <span class="material-symbols-outlined">visibility</span>
+                  Track & Details
+                </a>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

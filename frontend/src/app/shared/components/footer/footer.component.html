@@ -1,0 +1,151 @@
+<footer class="footer-root">
+  <!-- Value Guarantees Ribbon -->
+  <div class="guarantee-ribbon">
+    <div class="trendora-container ribbon-inner">
+      <div class="ribbon-card">
+        <div class="ribbon-icon">
+          <span class="material-symbols-outlined">verified</span>
+        </div>
+        <div class="ribbon-text">
+          <strong>100% ORIGINAL</strong>
+          <span>guarantee for all products at Trendora</span>
+        </div>
+      </div>
+
+      <div class="ribbon-card">
+        <div class="ribbon-icon">
+          <span class="material-symbols-outlined">published_with_changes</span>
+        </div>
+        <div class="ribbon-text">
+          <strong>14-DAY RETURNS</strong>
+          <span>hassle-free exchange & return policy</span>
+        </div>
+      </div>
+
+      <div class="ribbon-card">
+        <div class="ribbon-icon">
+          <span class="material-symbols-outlined">local_shipping</span>
+        </div>
+        <div class="ribbon-text">
+          <strong>EXPRESS DELIVERY</strong>
+          <span>fast shipping across 20,000+ pincodes</span>
+        </div>
+      </div>
+
+      <div class="ribbon-card">
+        <div class="ribbon-icon">
+          <span class="material-symbols-outlined">lock</span>
+        </div>
+        <div class="ribbon-text">
+          <strong>SECURE CHECKOUT</strong>
+          <span>trusted payments and cash on delivery</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Footer Content -->
+  <div class="trendora-container footer-content">
+    <div class="footer-grid">
+      
+      <!-- Brand & Mission Column -->
+      <div class="footer-col brand-col">
+        <div class="footer-brand">
+          <div class="brand-logo-mark"><span>T</span></div>
+          <span class="brand-name">TRENDORA</span>
+        </div>
+        <p class="brand-desc">
+          Discover Your Style. Define Your Trend. Trendora is your one-stop fashion destination bringing curated global styles, premium apparel, and everyday luxury directly to your wardrobe.
+        </p>
+        <div class="newsletter-box">
+          <span class="newsletter-title">Subscribe to Fashion Drops</span>
+          <div class="newsletter-input-group">
+            <input type="email" placeholder="Enter your email" aria-label="Email for newsletter" />
+            <button class="btn btn-primary btn-sm">JOIN</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Column -->
+      <div class="footer-col">
+        <h4>ONLINE SHOPPING</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/products" [queryParams]="{ category: 'Men' }">Men's Fashion</a></li>
+          <li><a routerLink="/products" [queryParams]="{ category: 'Women' }">Women's Fashion</a></li>
+          <li><a routerLink="/products" [queryParams]="{ category: 'Kids' }">Kids & Teens</a></li>
+          <li><a routerLink="/products" [queryParams]="{ category: 'Home & Living' }">Home & Living</a></li>
+          <li><a routerLink="/products" [queryParams]="{ category: 'Beauty' }">Beauty & Grooming</a></li>
+          <li><a routerLink="/products" [queryParams]="{ tag: 'trending' }">Trending Now</a></li>
+        </ul>
+      </div>
+
+      <!-- Customer Policies Column -->
+      <div class="footer-col">
+        <h4>CUSTOMER POLICIES</h4>
+        <ul class="footer-links">
+          <li><a routerLink="/">Contact Us</a></li>
+          <li><a routerLink="/">FAQ & Help Center</a></li>
+          <li><a routerLink="/">Track Orders</a></li>
+          <li><a routerLink="/">Shipping Policy</a></li>
+          <li><a routerLink="/">Cancellation & Returns</a></li>
+          <li><a routerLink="/">Terms & Conditions</a></li>
+          <li><a routerLink="/">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <!-- Quick Connect & App Column -->
+      <div class="footer-col">
+        <h4>EXPERIENCE TRENDORA</h4>
+        <p class="app-subtext">Shop seamless luxury anytime, anywhere on your mobile device.</p>
+        <div class="app-badges">
+          <div class="store-badge">
+            <span class="material-symbols-outlined">android</span>
+            <div class="badge-text">
+              <small>GET IT ON</small>
+              <strong>Google Play</strong>
+            </div>
+          </div>
+          <div class="store-badge">
+            <span class="material-symbols-outlined">phone_iphone</span>
+            <div class="badge-text">
+              <small>Download on the</small>
+              <strong>App Store</strong>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-top: 24px;">KEEP IN TOUCH</h4>
+        <div class="social-icons">
+          <a href="#" class="social-link" aria-label="Instagram">
+            <span class="material-symbols-outlined">photo_camera</span>
+          </a>
+          <a href="#" class="social-link" aria-label="Facebook">
+            <span class="material-symbols-outlined">thumb_up</span>
+          </a>
+          <a href="#" class="social-link" aria-label="YouTube">
+            <span class="material-symbols-outlined">smart_display</span>
+          </a>
+          <a href="#" class="social-link" aria-label="Pinterest">
+            <span class="material-symbols-outlined">push_pin</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Copyright -->
+    <div class="footer-bottom">
+      <div class="copyright">
+        © {{ currentYear }} Trendora — Fashion E-Commerce Platform. All rights reserved.
+      </div>
+      <div class="popular-searches">
+        <span>Popular:</span>
+        <a routerLink="/products" [queryParams]="{ search: 'Jackets' }">Jackets</a>
+        <a routerLink="/products" [queryParams]="{ search: 'Dresses' }">Dresses</a>
+        <a routerLink="/products" [queryParams]="{ search: 'Sneakers' }">Sneakers</a>
+        <a routerLink="/products" [queryParams]="{ search: 'Hoodies' }">Hoodies</a>
+        <a routerLink="/products" [queryParams]="{ search: 'Kurtas' }">Kurtas</a>
+      </div>
+    </div>
+  </div>
+</footer>

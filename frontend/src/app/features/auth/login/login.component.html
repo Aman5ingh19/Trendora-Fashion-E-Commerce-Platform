@@ -1,0 +1,104 @@
+<div class="auth-page">
+  <div class="auth-card">
+    
+    <!-- Brand Header -->
+    <div class="auth-header">
+      <div class="brand-logo-mark"><span>T</span></div>
+      <h2>Login to Trendora</h2>
+      <p>Discover Your Style. Define Your Trend.</p>
+    </div>
+
+    <!-- Error Alert -->
+    @if (errorMessage()) {
+      <div class="alert alert-danger" role="alert">
+        <span class="material-symbols-outlined">error</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="login-email">Email Address</label>
+        <div class="input-wrapper" [class.has-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+          <span class="material-symbols-outlined input-icon">mail</span>
+          <input 
+            type="email" 
+            id="login-email" 
+            formControlName="email" 
+            placeholder="name@example.com"
+            autocomplete="email"
+          />
+        </div>
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']) {
+          <span class="field-error">Email is required</span>
+        }
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['email']) {
+          <span class="field-error">Please enter a valid email address</span>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="login-password">Password</label>
+          <a routerLink="/auth/login" class="forgot-link">Forgot?</a>
+        </div>
+        <div class="input-wrapper" [class.has-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          <span class="material-symbols-outlined input-icon">lock</span>
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            id="login-password" 
+            formControlName="password" 
+            placeholder="Enter password"
+            autocomplete="current-password"
+          />
+          <button type="button" class="eye-toggle" (click)="toggleShowPassword()" aria-label="Toggle password visibility">
+            <span class="material-symbols-outlined">
+              {{ showPassword() ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']) {
+          <span class="field-error">Password is required</span>
+        }
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['minlength']) {
+          <span class="field-error">Password must be at least 6 characters</span>
+        }
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary btn-block submit-btn" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          LOGGING IN...
+        } @else {
+          LOGIN
+        }
+      </button>
+
+      <!-- Demo Credentials Quick Access (Super helpful for grading & mentor testing) -->
+      <div class="demo-box">
+        <span class="demo-title">Quick Demo Login:</span>
+        <div class="demo-actions">
+          <button type="button" class="btn-demo" (click)="fillCustomerCredentials()">
+            👤 Demo Customer
+          </button>
+          <button type="button" class="btn-demo admin-demo" (click)="fillAdminCredentials()">
+            🛡️ Demo Admin
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Footer Switcher -->
+    <div class="auth-footer">
+      <span>New to Trendora?</span>
+      <a routerLink="/auth/register" class="switch-link">Create an account</a>
+    </div>
+
+  </div>
+</div>

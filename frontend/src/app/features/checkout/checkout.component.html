@@ -1,0 +1,287 @@
+<div class="checkout-root">
+  <div class="trendora-container">
+
+    <!-- Stepper Navigation -->
+    <div class="checkout-stepper">
+      <div class="step-item active">
+        <span class="step-num">1</span>
+        <span class="step-text">BAG</span>
+      </div>
+      <div class="step-line active"></div>
+      <div class="step-item active">
+        <span class="step-num">2</span>
+        <span class="step-text">ADDRESS</span>
+      </div>
+      <div class="step-line active"></div>
+      <div class="step-item active">
+        <span class="step-num">3</span>
+        <span class="step-text">PAYMENT</span>
+      </div>
+    </div>
+
+    <div class="checkout-grid">
+
+      <!-- LEFT: Steps (Address & Payment) -->
+      <div class="checkout-main-column">
+
+        <!-- 1. Delivery Address Section -->
+        <section class="checkout-section">
+          <div class="section-top">
+            <h3>SELECT DELIVERY ADDRESS</h3>
+            <button class="btn btn-outline-primary btn-sm" (click)="openAddressModal()">
+              <span class="material-symbols-outlined">add</span>
+              ADD NEW ADDRESS
+            </button>
+          </div>
+
+          @if (addresses.length === 0) {
+            <div class="no-address-box">
+              <span class="material-symbols-outlined">home_pin</span>
+              <p>No delivery address saved yet. Please add a shipping address to receive your order.</p>
+              <button class="btn btn-primary btn-sm" (click)="openAddressModal()">
+                + ADD ADDRESS
+              </button>
+            </div>
+          } @else {
+            <div class="address-cards-grid">
+              @for (addr of addresses; track addr._id) {
+                <div 
+                  class="address-card" 
+                  [class.selected]="selectedAddressId() === addr._id"
+                  (click)="selectAddress(addr._id)"
+                >
+                  <div class="card-radio">
+                    <input 
+                      type="radio" 
+                      name="deliveryAddress" 
+                      [checked]="selectedAddressId() === addr._id"
+                      (change)="selectAddress(addr._id)" 
+                    />
+                  </div>
+                  <div class="card-details">
+                    <div class="name-badge-row">
+                      <strong>{{ addr.fullName }}</strong>
+                      @if (addr.isDefault) {
+                        <span class="default-badge">DEFAULT</span>
+                      }
+                    </div>
+                    <p class="street-p">{{ addr.street }}</p>
+                    <p class="city-p">{{ addr.city }}, {{ addr.state }} - <strong>{{ addr.pincode }}</strong></p>
+                    <p class="phone-p">Mobile: <span>{{ addr.phone }}</span></p>
+
+                    @if (selectedAddressId() === addr._id) {
+                      <div class="deliver-here-badge">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        DELIVERING TO THIS ADDRESS
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- 2. Order Review Items List -->
+        <section class="checkout-section">
+          <div class="section-top">
+            <h3>ORDER ITEMS ({{ cartService.count() }})</h3>
+          </div>
+
+          <div class="order-items-preview">
+            @for (item of cartService.items(); track (item._id || $index)) {
+              <div class="mini-item">
+                <img 
+                  [src]="item.product.images[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&auto=format&fit=crop&q=80'" 
+                  [alt]="item.product.name" 
+                />
+                <div class="mini-info">
+                  <strong>{{ item.product.brand }}</strong>
+                  <p>{{ item.product.name }}</p>
+                  <small>Size: {{ item.size }} | Qty: {{ item.quantity }}</small>
+                </div>
+                <div class="mini-price">
+                  <span>₹{{ (item.price * item.quantity).toLocaleString('en-IN') }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- 3. Payment Method Section -->
+        <section class="checkout-section">
+          <div class="section-top">
+            <h3>SELECT PAYMENT METHOD</h3>
+          </div>
+
+          <div class="payment-options-list">
+            <!-- COD Option -->
+            <label class="payment-card" [class.selected]="selectedPaymentMethod() === 'COD'">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="COD"
+                [checked]="selectedPaymentMethod() === 'COD'"
+                (change)="selectedPaymentMethod.set('COD')"
+              />
+              <div class="payment-icon">
+                <span class="material-symbols-outlined">payments</span>
+              </div>
+              <div class="payment-info">
+                <strong>Cash on Delivery (Cash / UPI on Arrival)</strong>
+                <p>Pay with cash or digital UPI when your order is delivered right at your doorstep.</p>
+              </div>
+              <span class="recommended-badge">RECOMMENDED</span>
+            </label>
+
+            <!-- Online Mock Option -->
+            <label class="payment-card disabled-card">
+              <input type="radio" name="paymentMethod" value="ONLINE" disabled />
+              <div class="payment-icon">
+                <span class="material-symbols-outlined">credit_card</span>
+              </div>
+              <div class="payment-info">
+                <strong>Credit / Debit Card & Netbanking</strong>
+                <p>Online payment gateways can be activated in production via Razorpay / Stripe.</p>
+              </div>
+            </label>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT: Bill Summary -->
+      <div class="checkout-summary-column">
+        <div class="bill-card">
+          <h4 class="bill-title">PRICE DETAILS ({{ cartService.count() }} Items)</h4>
+
+          <div class="bill-row">
+            <span>Total MRP</span>
+            <span>₹{{ cartService.originalTotal().toLocaleString('en-IN') }}</span>
+          </div>
+
+          <div class="bill-row discount-row">
+            <span>Discount on MRP</span>
+            <span class="text-success">-₹{{ cartService.totalDiscount().toLocaleString('en-IN') }}</span>
+          </div>
+
+          <div class="bill-row">
+            <span>Convenience / Delivery Fee</span>
+            @if (cartService.deliveryFee() === 0) {
+              <span class="text-success">FREE</span>
+            } @else {
+              <span>₹{{ cartService.deliveryFee() }}</span>
+            }
+          </div>
+
+          <div class="bill-divider"></div>
+
+          <div class="bill-row total-row">
+            <strong>Total Amount</strong>
+            <strong>₹{{ cartService.grandTotal().toLocaleString('en-IN') }}</strong>
+          </div>
+
+          <button 
+            class="btn btn-primary btn-block checkout-btn" 
+            [disabled]="isSubmitting() || !selectedAddressId()"
+            (click)="proceedToPlaceOrder()"
+          >
+            @if (isSubmitting()) {
+              <span class="spinner"></span> VALIDATING...
+            } @else {
+              CONTINUE TO PLACE ORDER
+            }
+          </button>
+
+          <div class="checkout-guarantee">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span>100% Safe and Secure Checkout Experience.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Add Address Modal -->
+  @if (showAddressModal()) {
+    <div class="modal-overlay" (click)="closeAddressModal()"></div>
+    <div class="address-modal">
+      <div class="modal-header">
+        <h3>ADD NEW DELIVERY ADDRESS</h3>
+        <button class="close-btn" (click)="closeAddressModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form [formGroup]="addressForm" (ngSubmit)="saveAddress()" class="modal-form">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" formControlName="fullName" placeholder="e.g. Maya Sharma" />
+            @if (addressForm.get('fullName')?.touched && addressForm.get('fullName')?.invalid) {
+              <span class="field-error">Name is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Mobile Number *</label>
+            <input type="tel" formControlName="phone" placeholder="10-digit mobile number" />
+            @if (addressForm.get('phone')?.touched && addressForm.get('phone')?.invalid) {
+              <span class="field-error">Valid phone required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Pincode *</label>
+            <input type="text" formControlName="pincode" maxlength="6" placeholder="6-digit pincode" />
+            @if (addressForm.get('pincode')?.touched && addressForm.get('pincode')?.invalid) {
+              <span class="field-error">6-digit pincode required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>City *</label>
+            <input type="text" formControlName="city" placeholder="City / District" />
+            @if (addressForm.get('city')?.touched && addressForm.get('city')?.invalid) {
+              <span class="field-error">City is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>State *</label>
+          <input type="text" formControlName="state" placeholder="State" />
+          @if (addressForm.get('state')?.touched && addressForm.get('state')?.invalid) {
+            <span class="field-error">State is required</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Street Address, Flat / House No., Landmark *</label>
+          <textarea formControlName="street" rows="3" placeholder="Address details"></textarea>
+          @if (addressForm.get('street')?.touched && addressForm.get('street')?.invalid) {
+            <span class="field-error">Street address is required</span>
+          }
+        </div>
+
+        <div class="checkbox-row">
+          <label>
+            <input type="checkbox" formControlName="isDefault" />
+            <span>Make this my default delivery address</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" (click)="closeAddressModal()">CANCEL</button>
+          <button type="submit" class="btn btn-primary">SAVE ADDRESS</button>
+        </div>
+
+      </form>
+    </div>
+  }
+</div>

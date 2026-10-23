@@ -1,0 +1,147 @@
+<div class="auth-page">
+  <div class="auth-card">
+    
+    <!-- Brand Header -->
+    <div class="auth-header">
+      <div class="brand-logo-mark"><span>T</span></div>
+      <h2>Join Trendora</h2>
+      <p>Discover Your Style. Define Your Trend.</p>
+    </div>
+
+    <!-- Error Alert -->
+    @if (errorMessage()) {
+      <div class="alert alert-danger" role="alert">
+        <span class="material-symbols-outlined">error</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Register Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="reg-name">Full Name</label>
+        <div class="input-wrapper" [class.has-error]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid">
+          <span class="material-symbols-outlined input-icon">person</span>
+          <input 
+            type="text" 
+            id="reg-name" 
+            formControlName="name" 
+            placeholder="e.g. Maya Sharma"
+            autocomplete="name"
+          />
+        </div>
+        @if (registerForm.get('name')?.touched && registerForm.get('name')?.errors?.['required']) {
+          <span class="field-error">Full name is required</span>
+        }
+      </div>
+
+      <!-- Email Address -->
+      <div class="form-group">
+        <label for="reg-email">Email Address</label>
+        <div class="input-wrapper" [class.has-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+          <span class="material-symbols-outlined input-icon">mail</span>
+          <input 
+            type="email" 
+            id="reg-email" 
+            formControlName="email" 
+            placeholder="name@example.com"
+            autocomplete="email"
+          />
+        </div>
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['required']) {
+          <span class="field-error">Email is required</span>
+        }
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']) {
+          <span class="field-error">Please enter a valid email address</span>
+        }
+      </div>
+
+      <!-- Phone Number -->
+      <div class="form-group">
+        <label for="reg-phone">Phone Number (Optional)</label>
+        <div class="input-wrapper">
+          <span class="material-symbols-outlined input-icon">call</span>
+          <input 
+            type="tel" 
+            id="reg-phone" 
+            formControlName="phone" 
+            placeholder="+91 9876543210"
+            autocomplete="tel"
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="reg-password">Create Password</label>
+        <div class="input-wrapper" [class.has-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+          <span class="material-symbols-outlined input-icon">lock</span>
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            id="reg-password" 
+            formControlName="password" 
+            placeholder="At least 6 characters"
+            autocomplete="new-password"
+          />
+          <button type="button" class="eye-toggle" (click)="toggleShowPassword()" aria-label="Toggle password visibility">
+            <span class="material-symbols-outlined">
+              {{ showPassword() ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']) {
+          <span class="field-error">Password is required</span>
+        }
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']) {
+          <span class="field-error">Password must be at least 6 characters</span>
+        }
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label for="reg-confirm">Confirm Password</label>
+        <div class="input-wrapper" [class.has-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid">
+          <span class="material-symbols-outlined input-icon">lock_reset</span>
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            id="reg-confirm" 
+            formControlName="confirmPassword" 
+            placeholder="Re-enter password"
+            autocomplete="new-password"
+          />
+        </div>
+        @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['passwordMismatch']) {
+          <span class="field-error">Passwords do not match</span>
+        }
+      </div>
+
+      <!-- Agree Terms Checkbox -->
+      <div class="form-group-checkbox">
+        <label class="checkbox-container">
+          <input type="checkbox" formControlName="agreeTerms" />
+          <span>I agree to Trendora's <a routerLink="/" class="link">Terms of Service</a> and <a routerLink="/" class="link">Privacy Policy</a></span>
+        </label>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary btn-block submit-btn" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          CREATING ACCOUNT...
+        } @else {
+          CREATE ACCOUNT
+        }
+      </button>
+
+    </form>
+
+    <!-- Footer Switcher -->
+    <div class="auth-footer">
+      <span>Already have a Trendora account?</span>
+      <a routerLink="/auth/login" class="switch-link">Login here</a>
+    </div>
+
+  </div>
+</div>

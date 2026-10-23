@@ -1,0 +1,438 @@
+<div class="admin-dashboard-page">
+  <div class="admin-container">
+    
+    <!-- Admin Top Header -->
+    <div class="admin-topbar">
+      <div class="topbar-left">
+        <div class="badge-admin">
+          <span class="material-symbols-outlined">shield_person</span>
+          ADMIN CONSOLE
+        </div>
+        <h1 class="topbar-title">Trendora Management Studio</h1>
+      </div>
+
+      <div class="topbar-right">
+        <button class="btn btn-primary" (click)="openCreateProductModal()">
+          <span class="material-symbols-outlined">add</span>
+          Add New Product
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    @if (metrics(); as m) {
+      <div class="kpi-grid">
+        <div class="kpi-card revenue-card">
+          <div class="kpi-icon">
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">TOTAL REVENUE</span>
+            <h2 class="kpi-value">₹{{ m.totalRevenue.toLocaleString('en-IN') }}</h2>
+            <span class="kpi-sub">Excludes cancelled orders</span>
+          </div>
+        </div>
+
+        <div class="kpi-card orders-card">
+          <div class="kpi-icon">
+            <span class="material-symbols-outlined">local_mall</span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">TOTAL ORDERS</span>
+            <h2 class="kpi-value">{{ m.totalOrders }}</h2>
+            <span class="kpi-sub">{{ m.pendingOrders }} pending fulfillment</span>
+          </div>
+        </div>
+
+        <div class="kpi-card products-card">
+          <div class="kpi-icon">
+            <span class="material-symbols-outlined">inventory</span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">ACTIVE PRODUCTS</span>
+            <h2 class="kpi-value">{{ m.totalProducts }}</h2>
+            <span class="kpi-sub">In catalogue</span>
+          </div>
+        </div>
+
+        <div class="kpi-card customers-card">
+          <div class="kpi-icon">
+            <span class="material-symbols-outlined">group</span>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">REGISTERED CUSTOMERS</span>
+            <h2 class="kpi-value">{{ m.totalCustomers }}</h2>
+            <span class="kpi-sub">Verified accounts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Breakdown Pill Strip -->
+      <div class="status-strip">
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'All'" (click)="onFilterStatusChange('All')">
+          <span class="dot all-dot"></span>
+          <span>All Orders ({{ m.totalOrders }})</span>
+        </div>
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'Placed'" (click)="onFilterStatusChange('Placed')">
+          <span class="dot placed-dot"></span>
+          <span>Placed ({{ m.statusBreakdown.Placed }})</span>
+        </div>
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'Confirmed'" (click)="onFilterStatusChange('Confirmed')">
+          <span class="dot confirmed-dot"></span>
+          <span>Confirmed ({{ m.statusBreakdown.Confirmed }})</span>
+        </div>
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'Shipped'" (click)="onFilterStatusChange('Shipped')">
+          <span class="dot shipped-dot"></span>
+          <span>Shipped ({{ m.statusBreakdown.Shipped }})</span>
+        </div>
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'Delivered'" (click)="onFilterStatusChange('Delivered')">
+          <span class="dot delivered-dot"></span>
+          <span>Delivered ({{ m.statusBreakdown.Delivered }})</span>
+        </div>
+        <div class="strip-item" [class.active]="selectedOrderStatusFilter() === 'Cancelled'" (click)="onFilterStatusChange('Cancelled')">
+          <span class="dot cancelled-dot"></span>
+          <span>Cancelled ({{ m.statusBreakdown.Cancelled }})</span>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert Banner -->
+      @if (m.lowStockProducts && m.lowStockProducts.length > 0) {
+        <div class="low-stock-alert">
+          <div class="alert-icon">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <div class="alert-text">
+            <strong>Low Inventory Warning ({{ m.lowStockProducts.length }} products with stock &le; 5 units)</strong>
+            <p>
+              @for (lp of m.lowStockProducts; track lp._id; let last = $last) {
+                <span>{{ lp.name }} ({{ lp.brand }}){{ !last ? ', ' : '' }}</span>
+              }
+            </p>
+          </div>
+          <button class="btn btn-sm btn-secondary" (click)="activeTab.set('products')">
+            Adjust Stock
+          </button>
+        </div>
+      }
+    }
+
+    <!-- Tab Navigation -->
+    <div class="admin-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'orders'"
+        (click)="activeTab.set('orders')"
+      >
+        <span class="material-symbols-outlined">orders</span>
+        Orders Fulfillment
+      </button>
+
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'products'"
+        (click)="activeTab.set('products')"
+      >
+        <span class="material-symbols-outlined">inventory_2</span>
+        Product Catalogue ({{ products().length }})
+      </button>
+    </div>
+
+    <!-- TAB 1: ORDERS FULFILLMENT -->
+    @if (activeTab() === 'orders') {
+      <div class="tab-panel">
+        <div class="panel-header">
+          <h3>Customer Orders</h3>
+          <div class="filter-group">
+            <label for="statusSelect">Filter Status:</label>
+            <select 
+              id="statusSelect"
+              [ngModel]="selectedOrderStatusFilter()" 
+              (ngModelChange)="onFilterStatusChange($event)"
+              class="admin-select"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Placed">Placed</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        @if (isLoadingOrders()) {
+          <div class="admin-loading">
+            <div class="spinner"></div>
+            <p>Loading orders...</p>
+          </div>
+        } @else if (orders().length === 0) {
+          <div class="admin-empty">
+            <span class="material-symbols-outlined">inbox</span>
+            <p>No orders found matching this filter.</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status Update</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of orders(); track order._id) {
+                  <tr>
+                    <td>
+                      <span class="order-id-code">#{{ order._id.slice(-8).toUpperCase() }}</span>
+                    </td>
+                    <td>
+                      <div class="customer-cell">
+                        <strong>{{ order.shippingAddress.fullName }}</strong>
+                        <small>{{ order.shippingAddress.city }}, {{ order.shippingAddress.pincode }}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="date-cell">{{ order.createdAt | date:'shortDate' }}</span>
+                    </td>
+                    <td>
+                      <span class="items-count-badge">{{ order.orderItems.length }} {{ order.orderItems.length === 1 ? 'item' : 'items' }}</span>
+                    </td>
+                    <td>
+                      <strong class="price-cell">₹{{ order.pricing.total.toLocaleString('en-IN') }}</strong>
+                      <span class="pay-method">{{ order.paymentMethod }}</span>
+                    </td>
+                    <td>
+                      <div class="status-select-wrap">
+                        <select 
+                          [ngModel]="order.orderStatus"
+                          (ngModelChange)="updateOrderStatus(order, $event)"
+                          [disabled]="order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled'"
+                          class="status-select"
+                          [ngClass]="getStatusClass(order.orderStatus)"
+                        >
+                          <option value="Placed">Placed</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                    </td>
+                    <td>
+                      <a [routerLink]="['/orders', order._id]" class="btn btn-sm btn-secondary">
+                        <span class="material-symbols-outlined">visibility</span>
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB 2: PRODUCT CATALOGUE -->
+    @if (activeTab() === 'products') {
+      <div class="tab-panel">
+        <div class="panel-header">
+          <h3>Product Catalogue Management</h3>
+          <button class="btn btn-primary btn-sm" (click)="openCreateProductModal()">
+            <span class="material-symbols-outlined">add</span>
+            Add Product
+          </button>
+        </div>
+
+        @if (isLoadingProducts()) {
+          <div class="admin-loading">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Brand</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock by Size</th>
+                  <th>Total Stock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (prod of products(); track prod._id) {
+                  <tr>
+                    <td>
+                      <div class="product-cell">
+                        <img 
+                          [src]="prod.images[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&auto=format&fit=crop&q=80'" 
+                          [alt]="prod.name" 
+                        />
+                        <div class="product-names">
+                          <strong>{{ prod.name }}</strong>
+                          <small>{{ prod.gender }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="brand-badge">{{ prod.brand }}</span>
+                    </td>
+                    <td>
+                      <span class="category-text">
+                        {{ getCategoryName(prod.category) }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="price-cell-box">
+                        <strong>₹{{ prod.price.toLocaleString('en-IN') }}</strong>
+                        @if (prod.originalPrice > prod.price) {
+                          <small class="mrp-strikethrough">₹{{ prod.originalPrice.toLocaleString('en-IN') }}</small>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <div class="sizes-chips">
+                        @for (s of prod.sizes; track s.size) {
+                          <span class="size-stock-chip" [class.empty]="s.stock === 0" [class.low]="s.stock > 0 && s.stock <= 5">
+                            {{ s.size }}: <strong>{{ s.stock }}</strong>
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <span 
+                        class="total-stock-pill" 
+                        [class.out]="getTotalStock(prod) === 0"
+                        [class.warning]="getTotalStock(prod) > 0 && getTotalStock(prod) <= 10"
+                      >
+                        {{ getTotalStock(prod) }} units
+                      </span>
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button class="btn-icon edit-btn" (click)="openEditProductModal(prod)" title="Edit Product">
+                          <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="btn-icon delete-btn" (click)="deleteProduct(prod._id)" title="Delete Product">
+                          <span class="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- Add / Edit Product Modal -->
+@if (showProductModal()) {
+  <div class="modal-overlay" (click)="closeProductModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingProductId() ? 'Edit Product' : 'Add New Product' }}</h3>
+        <button class="modal-close" (click)="closeProductModal()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="product-form">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>Product Name *</label>
+            <input type="text" formControlName="name" class="form-control" placeholder="e.g. Slim Fit Cotton Oxford Shirt" />
+          </div>
+          <div class="form-group flex-1">
+            <label>Brand *</label>
+            <input type="text" formControlName="brand" class="form-control" placeholder="e.g. TRENDORA MAN" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select formControlName="category" class="form-control">
+              <option value="Clothing">Clothing</option>
+              <option value="Footwear">Footwear</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Ethnic Wear">Ethnic Wear</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Gender *</label>
+            <select formControlName="gender" class="form-control">
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+              <option value="Kids">Kids</option>
+              <option value="Unisex">Unisex</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Selling Price (₹) *</label>
+            <input type="number" formControlName="price" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Original MRP (₹) *</label>
+            <input type="number" formControlName="originalPrice" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Image URL *</label>
+          <input type="text" formControlName="imageUrl" class="form-control" placeholder="https://..." />
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea formControlName="description" class="form-control" rows="2" placeholder="Product details, fabric, and styling tips..."></textarea>
+        </div>
+
+        <div class="sizes-grid-box">
+          <label class="sizes-title">Inventory Stock by Size</label>
+          <div class="sizes-inputs">
+            <div class="size-col">
+              <span>Size S</span>
+              <input type="number" formControlName="sizeS" class="form-control-sm" />
+            </div>
+            <div class="size-col">
+              <span>Size M</span>
+              <input type="number" formControlName="sizeM" class="form-control-sm" />
+            </div>
+            <div class="size-col">
+              <span>Size L</span>
+              <input type="number" formControlName="sizeL" class="form-control-sm" />
+            </div>
+            <div class="size-col">
+              <span>Size XL</span>
+              <input type="number" formControlName="sizeXL" class="form-control-sm" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeProductModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            {{ editingProductId() ? 'Save Changes' : 'Create Product' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,234 @@
+<div class="home-root">
+
+  <!-- 1. HERO PROMOTIONAL BANNER CAROUSEL -->
+  <section class="hero-carousel-section" (mouseenter)="stopAutoSlide()" (mouseleave)="startAutoSlide()">
+    <div class="carousel-track">
+      @for (slide of heroSlides; track slide.id; let idx = $index) {
+        <div class="carousel-slide" [class.active]="currentSlide() === idx">
+          <div class="slide-media" [style.backgroundImage]="'url(' + slide.imageUrl + ')'">
+            <div class="slide-overlay"></div>
+          </div>
+          
+          <div class="trendora-container slide-content-wrapper">
+            <div class="slide-text-box">
+              <span class="slide-tagline">{{ slide.tagline }}</span>
+              <h1 class="slide-title">{{ slide.title }}</h1>
+              <p class="slide-subtitle">{{ slide.subtitle }}</p>
+              
+              <div class="slide-offer-badge">
+                <span>{{ slide.discount }}</span>
+              </div>
+
+              <div class="slide-actions">
+                <a 
+                  [routerLink]="['/products']" 
+                  [queryParams]="{ category: slide.categoryQuery }" 
+                  class="btn btn-primary"
+                >
+                  {{ slide.ctaText }}
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Carousel Controls -->
+    <button class="carousel-btn prev-btn" (click)="prevSlide()" aria-label="Previous Slide">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <button class="carousel-btn next-btn" (click)="nextSlide()" aria-label="Next Slide">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+
+    <!-- Slide Indicators -->
+    <div class="carousel-indicators">
+      @for (slide of heroSlides; track slide.id; let idx = $index) {
+        <button 
+          class="indicator-dot" 
+          [class.active]="currentSlide() === idx"
+          (click)="goToSlide(idx)"
+          [attr.aria-label]="'Go to slide ' + (idx + 1)"
+        ></button>
+      }
+    </div>
+  </section>
+
+  <!-- 2. FLASH SALE COUNTDOWN BANNER -->
+  <section class="flash-sale-ribbon">
+    <div class="trendora-container flash-sale-inner">
+      <div class="flash-left">
+        <span class="flash-badge">⚡ LIMITED TIME DROP</span>
+        <div class="flash-text">
+          <h2>TRENDORA LUXE HOUR</h2>
+          <p>Flat 50% to 80% OFF on Top Designer Collections + Free Express Delivery</p>
+        </div>
+      </div>
+
+      <div class="flash-countdown">
+        <span class="countdown-label">ENDS IN</span>
+        <div class="timer-boxes">
+          <div class="time-box">
+            <strong>{{ countdownHours() }}</strong>
+            <small>HRS</small>
+          </div>
+          <span class="time-colon">:</span>
+          <div class="time-box">
+            <strong>{{ countdownMins() }}</strong>
+            <small>MIN</small>
+          </div>
+          <span class="time-colon">:</span>
+          <div class="time-box">
+            <strong>{{ countdownSecs() }}</strong>
+            <small>SEC</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="flash-cta">
+        <a routerLink="/products" [queryParams]="{ tag: 'flash-sale' }" class="btn btn-primary btn-sm">
+          SHOP THE DROP
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. TRENDING CATEGORIES -->
+  <section class="categories-section">
+    <div class="trendora-container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">EXPLORE THE EDIT</span>
+        <h2 class="section-title">TRENDING CATEGORIES</h2>
+        <div class="title-underline"></div>
+      </div>
+
+      <div class="categories-grid">
+        @for (cat of trendingCategories; track cat.name) {
+          <a [routerLink]="['/products']" [queryParams]="{ category: cat.query }" class="category-circle-card">
+            <div class="circle-image-wrapper">
+              <img [src]="cat.imageUrl" [alt]="cat.name" loading="lazy" />
+              <div class="circle-discount">{{ cat.discount }}</div>
+            </div>
+            <span class="circle-cat-name">{{ cat.name }}</span>
+          </a>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. FEATURED PRODUCTS & CURATIONS WITH TABS -->
+  <section class="featured-products-section">
+    <div class="trendora-container">
+      
+      <div class="curation-header">
+        <div>
+          <span class="section-subtitle">HANDPICKED STYLES</span>
+          <h2 class="section-title">FEATURED COLLECTIONS</h2>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="tab-filters">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'all'" 
+            (click)="activeTab.set('all')"
+          >
+            All Curations
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'trending'" 
+            (click)="activeTab.set('trending')"
+          >
+            Trending Now
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'men'" 
+            (click)="activeTab.set('men')"
+          >
+            Men's Edit
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'women'" 
+            (click)="activeTab.set('women')"
+          >
+            Women's Edit
+          </button>
+          <button 
+            class="tab-btn deal-tab" 
+            [class.active]="activeTab() === 'deals'" 
+            (click)="activeTab.set('deals')"
+          >
+            Mega Deals (60%+ OFF)
+          </button>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid">
+        @for (product of filteredProducts; track product._id) {
+          <app-product-card [product]="product"></app-product-card>
+        }
+      </div>
+
+      <div class="view-all-wrapper">
+        <a routerLink="/products" class="btn btn-outline-primary">
+          EXPLORE ALL FASHION (2,400+ STYLES)
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. TOP BRAND SHOWCASE -->
+  <section class="brands-section">
+    <div class="trendora-container">
+      <div class="section-header text-center">
+        <span class="section-subtitle">ICONIC LABELS</span>
+        <h2 class="section-title">TOP BRANDS IN FOCUS</h2>
+        <div class="title-underline"></div>
+      </div>
+
+      <div class="brands-grid">
+        @for (brand of brands; track brand.name) {
+          <a [routerLink]="['/products']" [queryParams]="{ brand: brand.name }" class="brand-showcase-card">
+            <div class="brand-media">
+              <img [src]="brand.logo" [alt]="brand.name" loading="lazy" />
+              <div class="brand-overlay"></div>
+            </div>
+            <div class="brand-info">
+              <strong class="brand-title">{{ brand.name }}</strong>
+              <span class="brand-discount-badge">{{ brand.discount }}</span>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. TRENDORA INSIDER / VIP PERKS BANNER -->
+  <section class="insider-banner-section">
+    <div class="trendora-container">
+      <div class="insider-card">
+        <div class="insider-left">
+          <div class="crown-icon">
+            <span class="material-symbols-outlined filled">workspace_premium</span>
+          </div>
+          <div>
+            <h3>BECOME A TRENDORA INSIDER</h3>
+            <p>Earn reward credits on every order, enjoy priority early-access to flash sales, and complimentary style consultations.</p>
+          </div>
+        </div>
+        <div class="insider-right">
+          <a routerLink="/auth/register" class="btn btn-primary">JOIN VIP FOR FREE</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

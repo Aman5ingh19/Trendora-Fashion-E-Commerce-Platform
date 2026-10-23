@@ -1,0 +1,204 @@
+<div class="cart-root">
+  <div class="trendora-container">
+
+    <!-- Empty Cart State -->
+    @if (cartService.count() === 0) {
+      <div class="empty-cart-state">
+        <div class="empty-icon-circle">
+          <span class="material-symbols-outlined">shopping_bag</span>
+        </div>
+        <h2>Hey, your bag is empty!</h2>
+        <p>There is nothing in your bag. Explore our collections and discover something you love.</p>
+        
+        <div class="empty-actions">
+          @if (wishlistService.count() > 0) {
+            <a routerLink="/wishlist" class="btn btn-primary">
+              <span class="material-symbols-outlined">favorite</span>
+              ADD ITEMS FROM WISHLIST ({{ wishlistService.count() }})
+            </a>
+          }
+          <a routerLink="/products" class="btn btn-outline-primary">
+            EXPLORE TRENDING FASHION
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Live Cart View -->
+    @else {
+      <!-- Free Delivery Progress Ribbon -->
+      <div class="free-delivery-banner">
+        <div class="banner-text">
+          <span class="material-symbols-outlined">local_shipping</span>
+          @if (freeDeliveryRemaining > 0) {
+            <span>Shop for <strong>₹{{ freeDeliveryRemaining }}</strong> more to unlock <strong>FREE DELIVERY</strong>!</span>
+          } @else {
+            <span class="unlocked">🎉 You have unlocked <strong>FREE EXPRESS DELIVERY</strong>!</span>
+          }
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" [style.width.%]="freeDeliveryProgress"></div>
+        </div>
+      </div>
+
+      <div class="cart-grid">
+
+        <!-- LEFT: Cart Items List -->
+        <div class="cart-items-column">
+
+          <!-- Delivery Address Snippet -->
+          <div class="delivery-address-card">
+            <div class="address-icon">
+              <span class="material-symbols-outlined">location_on</span>
+            </div>
+            <div class="address-info">
+              @if (authService.isLoggedIn() && defaultAddress) {
+                <span>Deliver to: <strong>{{ defaultAddress.fullName }}, {{ defaultAddress.pincode }}</strong></span>
+                <small>{{ defaultAddress.street }}, {{ defaultAddress.city }}</small>
+              } @else if (authService.isLoggedIn()) {
+                <span>Deliver to your address</span>
+                <small>Select or add an address during checkout</small>
+              } @else {
+                <span>Delivery address</span>
+                <small><a routerLink="/auth/login" [queryParams]="{ returnUrl: '/cart' }" class="login-link">Login</a> to view delivery addresses</small>
+              }
+            </div>
+          </div>
+
+          <!-- Items Header -->
+          <div class="items-header">
+            <h3>SHOPPING BAG ({{ cartService.count() }} ITEMS)</h3>
+            <button class="clear-cart-link" (click)="cartService.clearCart()">EMPTY BAG</button>
+          </div>
+
+          <!-- Items List -->
+          <div class="cart-items-list">
+            @for (item of cartService.items(); track (item._id || $index)) {
+              <div class="cart-item-card">
+                
+                <!-- Product Thumbnail -->
+                <a [routerLink]="['/products', item.product._id]" class="item-media">
+                  <img 
+                    [src]="item.product.images[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&auto=format&fit=crop&q=80'" 
+                    [alt]="item.product.name" 
+                  />
+                </a>
+
+                <!-- Product Details -->
+                <div class="item-details">
+                  <div class="item-top">
+                    <div>
+                      <h4 class="item-brand">{{ item.product.brand }}</h4>
+                      <a [routerLink]="['/products', item.product._id]" class="item-title">
+                        {{ item.product.name }}
+                      </a>
+                    </div>
+
+                    <!-- Remove Cross -->
+                    <button class="remove-btn" (click)="removeItem(item)" aria-label="Remove item">
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  <!-- Size and Quantity Row -->
+                  <div class="item-options-row">
+                    <div class="option-chip">
+                      <span class="opt-label">Size:</span>
+                      <strong>{{ item.size }}</strong>
+                    </div>
+
+                    <div class="option-chip">
+                      <span class="opt-label">Qty:</span>
+                      <select 
+                        [ngModel]="item.quantity" 
+                        (ngModelChange)="onQuantityChange(item, $event)"
+                        class="qty-select"
+                      >
+                        @for (q of quantityOptions; track q) {
+                          <option [value]="q">{{ q }}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Price & MRP Row -->
+                  <div class="item-price-row">
+                    <span class="selling-price">₹{{ (item.price * item.quantity).toLocaleString('en-IN') }}</span>
+                    @if ((item.product.originalPrice || item.price) > item.price) {
+                      <span class="original-price">
+                        ₹{{ ((item.product.originalPrice || item.price) * item.quantity).toLocaleString('en-IN') }}
+                      </span>
+                      <span class="discount-badge">({{ item.product.discountPercentage }}% OFF)</span>
+                    }
+                  </div>
+
+                  <!-- Item Actions -->
+                  <div class="item-actions-bottom">
+                    <button class="action-link" (click)="removeItem(item)">
+                      <span class="material-symbols-outlined">delete</span> Remove
+                    </button>
+                    <span class="action-divider">|</span>
+                    <button class="action-link" (click)="moveToWishlist(item)">
+                      <span class="material-symbols-outlined">favorite_border</span> Move to Wishlist
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Bill / Price Summary Column -->
+        <div class="cart-summary-column">
+          <div class="bill-card">
+            
+            <h4 class="bill-title">PRICE DETAILS ({{ cartService.count() }} Items)</h4>
+            
+            <div class="bill-row">
+              <span>Total MRP</span>
+              <span>₹{{ cartService.originalTotal().toLocaleString('en-IN') }}</span>
+            </div>
+
+            <div class="bill-row discount-row">
+              <span>Discount on MRP</span>
+              <span class="text-success">-₹{{ cartService.totalDiscount().toLocaleString('en-IN') }}</span>
+            </div>
+
+            <div class="bill-row">
+              <span>Convenience / Delivery Fee</span>
+              @if (cartService.deliveryFee() === 0) {
+                <span class="text-success">FREE</span>
+              } @else {
+                <span>₹{{ cartService.deliveryFee() }}</span>
+              }
+            </div>
+
+            <div class="bill-divider"></div>
+
+            <div class="bill-row total-row">
+              <strong>Total Amount</strong>
+              <strong>₹{{ cartService.grandTotal().toLocaleString('en-IN') }}</strong>
+            </div>
+
+            <button class="btn btn-primary btn-block checkout-btn" (click)="proceedToCheckout()">
+              PLACE ORDER
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+
+            <!-- Safety & Trust Guarantee -->
+            <div class="checkout-guarantee">
+              <span class="material-symbols-outlined">verified_user</span>
+              <span>Safe and Secure Payments. Easy returns. 100% Authentic products.</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </div>
+</div>

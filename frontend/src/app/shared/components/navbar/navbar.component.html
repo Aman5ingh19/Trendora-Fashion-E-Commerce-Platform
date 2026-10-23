@@ -1,0 +1,236 @@
+<header class="navbar-root">
+  <div class="trendora-container navbar-inner">
+    
+    <!-- Mobile Hamburger Button -->
+    <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle navigation menu">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <!-- Brand Logo -->
+    <a routerLink="/" class="brand-link" (click)="closeMobileMenu()">
+      <div class="brand-logo-mark">
+        <span>T</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">TRENDORA</span>
+        <span class="brand-tagline">DISCOVER YOUR STYLE</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="nav-links desktop-only" aria-label="Main Navigation">
+      @for (cat of categories; track cat.label) {
+        <a 
+          [routerLink]="cat.path" 
+          [queryParams]="cat.queryParams" 
+          routerLinkActive="active"
+          class="nav-item"
+        >
+          {{ cat.label }}
+          @if (cat.isNew) {
+            <span class="badge-new">NEW</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input 
+          type="text" 
+          placeholder="Search for products, brands and more"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+          class="search-input"
+          aria-label="Search Trendora products"
+        />
+        @if (searchQuery) {
+          <button class="clear-btn" (click)="clearSearch()" aria-label="Clear search">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Header Actions (Profile, Wishlist, Cart) -->
+    <div class="nav-actions">
+      
+      <!-- Profile with Dropdown -->
+      <div class="action-item profile-wrapper" (mouseenter)="profileDropdownOpen.set(true)" (mouseleave)="profileDropdownOpen.set(false)">
+        <button class="action-btn" (click)="toggleProfileDropdown()" aria-label="User Profile">
+          <span class="material-symbols-outlined">person</span>
+          <span class="action-label">Profile</span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        @if (profileDropdownOpen()) {
+          <div class="profile-dropdown">
+            @if (!isLoggedIn) {
+              <div class="dropdown-header">
+                <h4>Welcome to Trendora</h4>
+                <p>To access orders, wishlist and personalized recommendations</p>
+                <a routerLink="/auth/login" class="btn btn-outline-primary btn-sm login-btn" (click)="closeProfileDropdown()">
+                  LOGIN / SIGNUP
+                </a>
+              </div>
+            } @else {
+              <div class="dropdown-header user-header">
+                <h4>Hello, {{ currentUser?.name }}</h4>
+                <p>{{ currentUser?.email }}</p>
+                <span class="role-badge" [class.admin-badge]="currentUser?.role === 'admin'">
+                  {{ currentUser?.role === 'admin' ? '🛡️ Administrator' : 'Verified Shopper' }}
+                </span>
+              </div>
+            }
+
+            <div class="dropdown-divider"></div>
+            <ul class="dropdown-links">
+              @if (isLoggedIn) {
+                <li>
+                  <a routerLink="/orders" (click)="closeProfileDropdown()">
+                    <span class="material-symbols-outlined">package_2</span> Orders
+                  </a>
+                </li>
+              }
+              <li>
+                <a routerLink="/wishlist" (click)="closeProfileDropdown()">
+                  <span class="material-symbols-outlined">favorite_border</span> Wishlist
+                </a>
+              </li>
+              @if (isLoggedIn) {
+                <li>
+                  <a routerLink="/account" (click)="closeProfileDropdown()">
+                    <span class="material-symbols-outlined">manage_accounts</span> My Account
+                  </a>
+                </li>
+              }
+              @if (currentUser?.role === 'admin') {
+                <li class="admin-link">
+                  <a routerLink="/admin" (click)="closeProfileDropdown()">
+                    <span class="material-symbols-outlined">dashboard</span> Admin Dashboard
+                  </a>
+                </li>
+              }
+              @if (isLoggedIn) {
+                <li class="logout-link">
+                  <a href="javascript:void(0)" (click)="logout()">
+                    <span class="material-symbols-outlined">logout</span> Log Out
+                  </a>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      <!-- Wishlist Action -->
+      <a routerLink="/wishlist" class="action-item" aria-label="Wishlist">
+        <div class="action-icon-wrapper">
+          <span class="material-symbols-outlined">favorite</span>
+          @if (wishlistService.count() > 0) {
+            <span class="badge-count">{{ wishlistService.count() }}</span>
+          }
+        </div>
+        <span class="action-label">Wishlist</span>
+      </a>
+
+      <!-- Shopping Bag Action -->
+      <a routerLink="/cart" class="action-item" aria-label="Shopping Bag">
+        <div class="action-icon-wrapper">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          @if (cartService.count() > 0) {
+            <span class="badge-count primary-badge">{{ cartService.count() }}</span>
+          }
+        </div>
+        <span class="action-label">Bag</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-drawer-overlay" (click)="closeMobileMenu()"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <div class="brand-link">
+          <div class="brand-logo-mark"><span>T</span></div>
+          <span class="brand-name">TRENDORA</span>
+        </div>
+        <button class="close-drawer-btn" (click)="closeMobileMenu()" aria-label="Close menu">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="mobile-drawer-body">
+        <div class="mobile-categories-title">SHOP BY CATEGORY</div>
+        <ul class="mobile-nav-list">
+          @for (cat of categories; track cat.label) {
+            <li>
+              <a 
+                [routerLink]="cat.path" 
+                [queryParams]="cat.queryParams" 
+                (click)="closeMobileMenu()"
+                class="mobile-nav-link"
+              >
+                <span>{{ cat.label }}</span>
+                @if (cat.isNew) {
+                  <span class="badge-new">NEW</span>
+                }
+                <span class="material-symbols-outlined arrow">chevron_right</span>
+              </a>
+            </li>
+          }
+        </ul>
+
+        <div class="mobile-categories-title" style="margin-top: 24px;">MY ACCOUNT</div>
+        <ul class="mobile-nav-list">
+          @if (!isLoggedIn) {
+            <li>
+              <a routerLink="/auth/login" (click)="closeMobileMenu()" class="mobile-nav-link">
+                <span>Login / Sign Up</span>
+                <span class="material-symbols-outlined arrow">chevron_right</span>
+              </a>
+            </li>
+          } @else {
+            <li>
+              <div class="mobile-nav-link user-greet">
+                <span>Hello, {{ currentUser?.name }}</span>
+              </div>
+            </li>
+            <li>
+              <a routerLink="/orders" (click)="closeMobileMenu()" class="mobile-nav-link">
+                <span>My Orders</span>
+                <span class="material-symbols-outlined arrow">chevron_right</span>
+              </a>
+            </li>
+            @if (currentUser?.role === 'admin') {
+              <li>
+                <a routerLink="/admin" (click)="closeMobileMenu()" class="mobile-nav-link">
+                  <span style="color: #7b1fa2;">Admin Dashboard</span>
+                  <span class="material-symbols-outlined arrow">chevron_right</span>
+                </a>
+              </li>
+            }
+          }
+          <li>
+            <a routerLink="/wishlist" (click)="closeMobileMenu()" class="mobile-nav-link">
+              <span>Wishlist ({{ wishlistService.count() }})</span>
+              <span class="material-symbols-outlined arrow">chevron_right</span>
+            </a>
+          </li>
+          @if (isLoggedIn) {
+            <li>
+              <a href="javascript:void(0)" (click)="logout()" class="mobile-nav-link logout-text">
+                <span>Log Out</span>
+                <span class="material-symbols-outlined arrow">logout</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</header>

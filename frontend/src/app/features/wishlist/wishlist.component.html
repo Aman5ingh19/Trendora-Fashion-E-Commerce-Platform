@@ -1,0 +1,86 @@
+<div class="wishlist-root">
+  <div class="trendora-container">
+
+    <!-- Empty State -->
+    @if (wishlistService.count() === 0) {
+      <div class="empty-wishlist-state">
+        <div class="heart-icon-circle">
+          <span class="material-symbols-outlined">favorite_border</span>
+        </div>
+        <h2>YOUR WISHLIST IS EMPTY</h2>
+        <p>Explore our fashion collections and shortlist your favorite styles to review later.</p>
+        <a routerLink="/products" class="btn btn-outline-primary">CONTINUE SHOPPING</a>
+      </div>
+    }
+
+    <!-- Live Wishlist Grid -->
+    @else {
+      <div class="wishlist-header">
+        <h1>MY WISHLIST</h1>
+        <span class="items-count">{{ wishlistService.count() }} Items</span>
+      </div>
+
+      <div class="wishlist-grid">
+        @for (item of wishlistService.items(); track item._id) {
+          <div class="wishlist-card">
+            
+            <!-- Remove Button -->
+            <button class="remove-cross-btn" (click)="removeItem(item, $event)" aria-label="Remove from wishlist">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <!-- Product Media -->
+            <a [routerLink]="['/products', item._id]" class="card-media">
+              <img 
+                [src]="item.images[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80'" 
+                [alt]="item.name" 
+              />
+            </a>
+
+            <!-- Card Info -->
+            <div class="card-body">
+              <h3 class="card-brand">{{ item.brand }}</h3>
+              <p class="card-title">{{ item.name }}</p>
+
+              <div class="card-prices">
+                <span class="selling-price">₹{{ item.price.toLocaleString('en-IN') }}</span>
+                @if ((item.originalPrice || 0) > (item.price || 0)) {
+                  <span class="original-price">₹{{ (item.originalPrice || 0).toLocaleString('en-IN') }}</span>
+                  <span class="discount-percent">({{ item.discountPercentage }}% OFF)</span>
+                }
+              </div>
+            </div>
+
+            <!-- Move To Bag Action / Size Selector -->
+            <div class="card-action">
+              @if (activeSizePickerProductId() !== item._id) {
+                <button class="btn-move-bag" (click)="openSizePicker(item._id, $event)">
+                  <span class="material-symbols-outlined">shopping_bag</span>
+                  MOVE TO BAG
+                </button>
+              } @else {
+                <div class="size-picker-bar">
+                  <span class="picker-label">SELECT SIZE:</span>
+                  <div class="picker-sizes">
+                    @for (s of item.sizes; track s.size) {
+                      <button 
+                        class="picker-size-pill" 
+                        [disabled]="s.stock === 0"
+                        (click)="moveSelectedSizeToCart(item, s.size, $event)"
+                      >
+                        {{ s.size }}
+                      </button>
+                    }
+                  </div>
+                  <button class="cancel-picker-btn" (click)="closeSizePicker()">✕</button>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

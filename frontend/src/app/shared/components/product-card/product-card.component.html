@@ -1,0 +1,75 @@
+<div class="product-card" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+  <a [routerLink]="['/products', product._id]" class="card-link">
+    
+    <!-- Image Media Container -->
+    <div class="image-wrapper">
+      <img 
+        [src]="product.images[activeImageIndex()] || product.images[0] || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80'" 
+        [alt]="product.name" 
+        loading="lazy"
+        class="product-image"
+      />
+
+      <!-- Rating Badge -->
+      @if (product.rating && product.rating.average > 0) {
+        <div class="rating-badge">
+          <span class="rating-val">{{ product.rating.average.toFixed(1) }}</span>
+          <span class="material-symbols-outlined rating-star filled">star</span>
+          <span class="rating-divider">|</span>
+          <span class="rating-count">{{ product.rating.count }}</span>
+        </div>
+      }
+
+      <!-- Wishlist Action Button -->
+      <button 
+        class="wishlist-btn" 
+        [class.wishlisted]="isWishlisted"
+        (click)="toggleWishlist($event)"
+        aria-label="Save to Wishlist"
+      >
+        <span class="material-symbols-outlined" [class.filled]="isWishlisted">favorite</span>
+      </button>
+
+      <!-- Hover Quick Add to Bag / Size Slider Overlay -->
+      <div class="quick-action-overlay" [class.visible]="showSizeSelector()">
+        @if (!showSizeSelector()) {
+          <button class="quick-add-btn" (click)="openSizeSelector($event)">
+            <span class="material-symbols-outlined">add_shopping_cart</span>
+            ADD TO BAG
+          </button>
+        } @else {
+          <div class="size-selector-overlay">
+            <span class="size-prompt">SELECT SIZE</span>
+            <div class="sizes-row">
+              @for (item of product.sizes; track item.size) {
+                <button 
+                  class="size-pill-btn" 
+                  [disabled]="item.stock === 0"
+                  (click)="selectSizeAndAdd(item.size, $event)"
+                >
+                  {{ item.size }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Card Content / Meta Info -->
+    <div class="card-info">
+      <h3 class="product-brand">{{ product.brand }}</h3>
+      <p class="product-name" [title]="product.name">{{ product.name }}</p>
+      
+      <div class="pricing-row">
+        <span class="selling-price">₹{{ product.price.toLocaleString('en-IN') }}</span>
+        @if (product.originalPrice > product.price) {
+          <span class="original-price">₹{{ product.originalPrice.toLocaleString('en-IN') }}</span>
+          <span class="discount-percent">({{ product.discountPercentage }}% OFF)</span>
+        }
+      </div>
+    </div>
+
+  </a>
+</div>

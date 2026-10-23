@@ -1,0 +1,242 @@
+<div class="order-details-page">
+  <div class="details-container">
+    
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">Home</a>
+      <span class="sep">/</span>
+      <a routerLink="/orders">My Orders</a>
+      <span class="sep">/</span>
+      <span class="current">Order Details</span>
+    </nav>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading order details...</p>
+      </div>
+    } @else if (order(); as ord) {
+      
+      <!-- Top Order Bar -->
+      <div class="details-header-card">
+        <div class="header-left">
+          <div class="order-id-badge">
+            <span class="label">ORDER ID</span>
+            <span class="val mono">#{{ ord._id.slice(-8).toUpperCase() }}</span>
+          </div>
+          <span class="date-chip">Placed on {{ ord.createdAt | date:'fullDate' }}</span>
+        </div>
+
+        <div class="header-right">
+          @if (canCancel(ord.orderStatus)) {
+            <button 
+              class="btn btn-outline-danger btn-sm"
+              (click)="cancelOrder()"
+              [disabled]="isCancelling()"
+            >
+              @if (isCancelling()) {
+                Cancelling...
+              } @else {
+                Cancel Order
+              }
+            </button>
+          }
+          <a routerLink="/orders" class="btn btn-secondary btn-sm">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Back to Orders
+          </a>
+        </div>
+      </div>
+
+      <!-- Tracking Stepper Card -->
+      <div class="stepper-card">
+        <div class="stepper-title">
+          <h3>Order Progress</h3>
+          @if (ord.orderStatus === 'Cancelled') {
+            <span class="cancelled-tag">Cancelled</span>
+          } @else if (ord.orderStatus === 'Delivered') {
+            <span class="delivered-tag">Delivered</span>
+          } @else {
+            <span class="in-transit-tag">In Progress</span>
+          }
+        </div>
+
+        @if (ord.orderStatus === 'Cancelled') {
+          <div class="cancelled-banner">
+            <span class="material-symbols-outlined">info</span>
+            <div>
+              <strong>This order was cancelled</strong>
+              <p>Items have been returned to warehouse inventory. If paid online, your refund will be processed within 5-7 business days.</p>
+            </div>
+          </div>
+        } @else {
+          <!-- Progress Bar Stepper -->
+          <div class="stepper-track">
+            @for (step of steps; track step; let i = $index) {
+              <div 
+                class="step-item" 
+                [class.completed]="getStepIndex(ord.orderStatus) > i"
+                [class.active]="getStepIndex(ord.orderStatus) === i"
+              >
+                <div class="step-circle">
+                  @if (getStepIndex(ord.orderStatus) > i) {
+                    <span class="material-symbols-outlined">check</span>
+                  } @else {
+                    <span>{{ i + 1 }}</span>
+                  }
+                </div>
+                <span class="step-label">{{ step }}</span>
+              </div>
+              @if (i < steps.length - 1) {
+                <div 
+                  class="step-connector" 
+                  [class.filled]="getStepIndex(ord.orderStatus) > i"
+                ></div>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Content Grid: Items (Left) vs Summary (Right) -->
+      <div class="details-grid">
+        
+        <!-- Left: Items & Status Timeline -->
+        <div class="grid-left">
+          
+          <!-- Items Card -->
+          <div class="section-card">
+            <h3 class="card-heading">
+              <span class="material-symbols-outlined">shopping_bag</span>
+              Items in this Order ({{ ord.orderItems.length }})
+            </h3>
+
+            <div class="items-list">
+              @for (item of ord.orderItems; track (item._id || $index)) {
+                <div class="item-detail-row">
+                  <div class="item-thumb">
+                    <img 
+                      [src]="item.image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&auto=format&fit=crop&q=80'" 
+                      [alt]="item.name" 
+                    />
+                  </div>
+                  <div class="item-body">
+                    <span class="item-brand">{{ item.brand }}</span>
+                    <h4 class="item-name">{{ item.name }}</h4>
+                    <div class="item-attributes">
+                      <span>Size: <strong>{{ item.size }}</strong></span>
+                      <span class="dot">·</span>
+                      <span>Qty: <strong>{{ item.quantity }}</strong></span>
+                    </div>
+                  </div>
+                  <div class="item-price-col">
+                    <span class="price-val">₹{{ (item.price * item.quantity).toLocaleString('en-IN') }}</span>
+                    <small class="unit-price">₹{{ item.price.toLocaleString('en-IN') }} each</small>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Status History Timeline -->
+          @if (ord.statusHistory && ord.statusHistory.length > 0) {
+            <div class="section-card">
+              <h3 class="card-heading">
+                <span class="material-symbols-outlined">history</span>
+                Status Updates
+              </h3>
+
+              <div class="timeline">
+                @for (history of ord.statusHistory; track $index) {
+                  <div class="timeline-entry">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                      <div class="entry-top">
+                        <strong class="entry-status">{{ history.status }}</strong>
+                        <span class="entry-time">{{ history.changedAt | date:'medium' }}</span>
+                      </div>
+                      @if (history.comment) {
+                        <p class="entry-comment">{{ history.comment }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+
+        <!-- Right: Shipping Address & Payment Summary -->
+        <div class="grid-right">
+          
+          <!-- Shipping Address -->
+          <div class="section-card">
+            <h3 class="card-heading">
+              <span class="material-symbols-outlined">location_on</span>
+              Delivery Address
+            </h3>
+
+            <div class="address-preview">
+              <strong class="recipient-name">{{ ord.shippingAddress.fullName }}</strong>
+              <p class="address-line">{{ ord.shippingAddress.street }}</p>
+              <p class="address-line">{{ ord.shippingAddress.city }}, {{ ord.shippingAddress.state }} - {{ ord.shippingAddress.pincode }}</p>
+              <p class="phone-line">
+                <span class="material-symbols-outlined">call</span>
+                {{ ord.shippingAddress.phone }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Payment & Pricing -->
+          <div class="section-card">
+            <h3 class="card-heading">
+              <span class="material-symbols-outlined">receipt_long</span>
+              Price Details
+            </h3>
+
+            <div class="price-breakdown">
+              <div class="breakdown-row">
+                <span>Subtotal (Items)</span>
+                <span>₹{{ ord.pricing.subtotal.toLocaleString('en-IN') }}</span>
+              </div>
+              <div class="breakdown-row">
+                <span>Delivery Fee</span>
+                @if (ord.pricing.deliveryFee === 0) {
+                  <span class="free-text">FREE</span>
+                } @else {
+                  <span>₹{{ ord.pricing.deliveryFee }}</span>
+                }
+              </div>
+              @if (ord.pricing.discount > 0) {
+                <div class="breakdown-row discount">
+                  <span>Coupon Discount</span>
+                  <span>-₹{{ ord.pricing.discount.toLocaleString('en-IN') }}</span>
+                </div>
+              }
+              <div class="breakdown-divider"></div>
+              <div class="breakdown-row total">
+                <strong>Total Amount</strong>
+                <strong class="total-price">₹{{ ord.pricing.total.toLocaleString('en-IN') }}</strong>
+              </div>
+            </div>
+
+            <div class="payment-method-box">
+              <span class="material-symbols-outlined">
+                {{ ord.paymentMethod === 'COD' ? 'payments' : 'credit_card' }}
+              </span>
+              <div>
+                <strong>{{ ord.paymentMethod === 'COD' ? 'Cash on Delivery (COD)' : 'Online Payment' }}</strong>
+                <p>Payment Status: <span class="payment-status-pill">{{ ord.paymentStatus }}</span></p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+</div>

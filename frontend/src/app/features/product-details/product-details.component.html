@@ -1,0 +1,279 @@
+<div class="pdp-root">
+  <div class="trendora-container">
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="pdp-skeleton">
+        <div class="skeleton-gallery">
+          <div class="skeleton-thumbs">
+            <div class="skeleton thumb" *ngFor="let i of [1,2,3]"></div>
+          </div>
+          <div class="skeleton main-image-skeleton"></div>
+        </div>
+        <div class="skeleton-info">
+          <div class="skeleton brand-skel"></div>
+          <div class="skeleton title-skel"></div>
+          <div class="skeleton price-skel"></div>
+          <div class="skeleton sizes-skel"></div>
+          <div class="skeleton btn-skel"></div>
+        </div>
+      </div>
+    }
+
+    <!-- Product Not Found -->
+    @else if (!product()) {
+      <div class="not-found-state">
+        <span class="material-symbols-outlined not-found-icon">error_outline</span>
+        <h2>Product Not Found</h2>
+        <p>The product you are looking for may have been removed or is temporarily unavailable.</p>
+        <a routerLink="/products" class="btn btn-primary">BROWSE ALL PRODUCTS</a>
+      </div>
+    }
+
+    <!-- Main Product Details View -->
+    @else {
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a routerLink="/">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a routerLink="/products" [queryParams]="{ gender: product()?.gender }">{{ product()?.gender }}</a>
+        <span class="breadcrumb-sep">/</span>
+        <a routerLink="/products" [queryParams]="{ brand: product()?.brand }">{{ product()?.brand }}</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="active-crumb">{{ product()?.name }}</span>
+      </nav>
+
+      <div class="pdp-grid">
+
+        <!-- 1. LEFT: Product Gallery -->
+        <div class="gallery-column">
+          <div class="thumbnails-rail">
+            @for (img of product()?.images; track $index; let idx = $index) {
+              <div 
+                class="thumb-wrapper" 
+                [class.active]="activeImageIndex() === idx"
+                (click)="selectImage(idx)"
+              >
+                <img [src]="img" [alt]="product()?.name + ' thumbnail ' + (idx + 1)" />
+              </div>
+            }
+          </div>
+
+          <div class="main-image-container">
+            <img 
+              [src]="product()?.images?.[activeImageIndex()] || product()?.images?.[0]" 
+              [alt]="product()?.name" 
+              class="main-image"
+            />
+            
+            @if (product()?.rating && (product()?.rating?.average || 0) > 0) {
+              <div class="pdp-rating-pill">
+                <span class="rating-value">{{ product()?.rating?.average?.toFixed(1) }}</span>
+                <span class="material-symbols-outlined rating-star filled">star</span>
+                <span class="rating-divider">|</span>
+                <span class="rating-count">{{ product()?.rating?.count }} Ratings</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- 2. RIGHT: Product Info & Purchase Actions -->
+        <div class="details-column">
+          
+          <div class="product-header">
+            <h1 class="brand-title">{{ product()?.brand }}</h1>
+            <p class="product-subtitle">{{ product()?.name }}</p>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Pricing Block -->
+          <div class="pricing-block">
+            <div class="price-row">
+              <span class="selling-price">₹{{ product()?.price?.toLocaleString('en-IN') }}</span>
+              @if ((product()?.originalPrice || 0) > (product()?.price || 0)) {
+                <span class="mrp-price">₹{{ product()?.originalPrice?.toLocaleString('en-IN') }}</span>
+                <span class="discount-badge">({{ product()?.discountPercentage }}% OFF)</span>
+              }
+            </div>
+            <span class="taxes-label">inclusive of all taxes</span>
+          </div>
+
+          <!-- Color Variants -->
+          @if (product()?.colors && (product()?.colors?.length || 0) > 0) {
+            <div class="color-section">
+              <span class="section-label">SELECT COLOR: <strong>{{ selectedColor() }}</strong></span>
+              <div class="color-chips-row">
+                @for (c of product()?.colors; track c) {
+                  <button 
+                    class="color-chip" 
+                    [class.active]="selectedColor() === c"
+                    (click)="selectedColor.set(c)"
+                  >
+                    {{ c }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Size Selection -->
+          <div class="sizes-section">
+            <div class="sizes-header">
+              <span class="section-label">
+                SELECT SIZE
+                @if (sizeError()) {
+                  <span class="error-msg">Please select a size</span>
+                }
+              </span>
+              <span class="size-chart-link">SIZE CHART</span>
+            </div>
+
+            <div class="sizes-grid">
+              @for (item of product()?.sizes; track item.size) {
+                <button 
+                  class="size-pill" 
+                  [class.active]="selectedSize() === item.size"
+                  [class.out-of-stock]="item.stock === 0"
+                  [disabled]="item.stock === 0"
+                  (click)="selectSize(item.size, item.stock)"
+                >
+                  {{ item.size }}
+                  @if (item.stock === 0) {
+                    <span class="strike"></span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Low Stock Indicator -->
+            @if (selectedSize() && getSelectedSizeStock() > 0 && getSelectedSizeStock() <= 5) {
+              <div class="low-stock-alert">
+                <span class="material-symbols-outlined">warning</span>
+                Hurry, only {{ getSelectedSizeStock() }} left in stock!
+              </div>
+            }
+          </div>
+
+          <!-- Action Buttons (Add to Bag & Wishlist) -->
+          <div class="pdp-actions">
+            <button class="btn btn-primary add-bag-btn" (click)="addToCart()">
+              <span class="material-symbols-outlined">shopping_bag</span>
+              ADD TO BAG
+            </button>
+
+            <button 
+              class="btn btn-outline wishlist-action-btn" 
+              [class.wishlisted]="isWishlisted"
+              (click)="toggleWishlist()"
+            >
+              <span class="material-symbols-outlined" [class.filled]="isWishlisted">favorite</span>
+              {{ isWishlisted ? 'WISHLISTED' : 'WISHLIST' }}
+            </button>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Pincode Delivery Options -->
+          <div class="delivery-section">
+            <div class="section-label">DELIVERY OPTIONS</div>
+            <div class="pincode-input-box">
+              <input 
+                type="text" 
+                maxlength="6"
+                placeholder="Enter 6-digit pincode" 
+                [ngModel]="pincodeInput()"
+                (ngModelChange)="pincodeInput.set($event)"
+                (keyup.enter)="checkPincode()"
+                class="pincode-field"
+              />
+              <button class="check-pincode-btn" (click)="checkPincode()">CHECK</button>
+            </div>
+
+            @if (pincodeChecked()) {
+              <div class="delivery-status">
+                <div class="status-item">
+                  <span class="material-symbols-outlined text-success">local_shipping</span>
+                  <span>{{ deliveryEstimate() }}</span>
+                </div>
+                <div class="status-item">
+                  <span class="material-symbols-outlined text-success">payments</span>
+                  <span>Cash on delivery available</span>
+                </div>
+              </div>
+            } @else {
+              <p class="pincode-hint">Please enter PIN code to check delivery time & Pay on Delivery availability.</p>
+            }
+          </div>
+
+          <!-- Trust Badges -->
+          <div class="trust-perks">
+            <div class="perk-item">
+              <span class="material-symbols-outlined">verified</span>
+              <span>100% Original Products</span>
+            </div>
+            <div class="perk-item">
+              <span class="material-symbols-outlined">published_with_changes</span>
+              <span>Easy 14 days return & exchange</span>
+            </div>
+            <div class="perk-item">
+              <span class="material-symbols-outlined">shield_with_heart</span>
+              <span>Pay on delivery might be available</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Product Details & Description -->
+          <div class="product-description-section">
+            <div class="section-label">PRODUCT DETAILS</div>
+            <p class="description-text">{{ product()?.description }}</p>
+
+            <div class="specs-grid">
+              <div class="spec-item">
+                <span class="spec-name">Category</span>
+                <span class="spec-val">{{ categoryName }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name">Sub-Category</span>
+                <span class="spec-val">{{ product()?.subCategory || 'Fashion Apparel' }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name">Fabric</span>
+                <span class="spec-val">100% Premium Cotton / Artisan Blend</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name">Fit</span>
+                <span class="spec-val">Contemporary Tailored Fit</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name">Wash Care</span>
+                <span class="spec-val">Machine wash cold gentle cycle</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- 3. BOTTOM: Related Products Section -->
+      @if (relatedProducts().length > 0) {
+        <section class="related-products-section">
+          <div class="section-header">
+            <span class="section-subtitle">EXPLORE MORE</span>
+            <h2 class="section-title">SIMILAR PRODUCTS</h2>
+            <div class="title-underline" style="margin: 8px 0 0;"></div>
+          </div>
+
+          <div class="related-grid">
+            @for (item of relatedProducts(); track item._id) {
+              <app-product-card [product]="item"></app-product-card>
+            }
+          </div>
+        </section>
+      }
+    }
+
+  </div>
+</div>
