@@ -380,25 +380,49 @@ A complete Postman collection is located in the root repository:
 
 ## 🌐 Production Deployment Guide
 
-### Environment Variables for Production
-When deploying to cloud providers (e.g. Render, Railway, AWS, DigitalOcean):
-```env
-PORT=5000
-NODE_ENV=production
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/trendora?retryWrites=true&w=majority
-USE_MEMORY_DB_IF_LOCAL_FAILS=false
-JWT_SECRET=generate_a_64_character_random_hex_string_here
-JWT_EXPIRE=7d
-COOKIE_SECRET=generate_another_random_secret_hash_here
-CLIENT_URL=https://your-trendora-app.domain.com
-```
+### 🚀 1. Deploy Backend to Render
 
-### Building Frontend for Production
-```bash
-cd frontend
-npm run build
-```
-The compiled static assets will be output to `frontend/dist/frontend/browser/`, ready to be served by NGINX, Cloudflare Pages, Vercel, or Express static file server.
+1. Log in to your [Render Dashboard](https://dashboard.render.com/) and click **New +** → **Web Service**.
+2. Connect your GitHub repository: `Aman5ingh19/Trendora-Fashion-E-Commerce-Platform`.
+3. Configure the service settings:
+   - **Name**: `trendora-api` (or your preferred name)
+   - **Region**: Choose the closest region to you (e.g., Singapore, Frankfurt, Oregon)
+   - **Root Directory**: `backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+4. Add the following **Environment Variables** under the Environment tab:
+   | Key | Value |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `MONGODB_URI` | `mongodb+srv://potterharry5143_db_user:lqwoHbwoTpEMlnuB@cluster0.vbtvr4g.mongodb.net/trendora_db?retryWrites=true&w=majority&appName=Cluster0` |
+   | `USE_MEMORY_DB_IF_LOCAL_FAILS` | `false` |
+   | `JWT_SECRET` | `trendora_super_secret_jwt_key_fashion_2026_change_in_production` |
+   | `JWT_EXPIRES_IN` | `7d` |
+   | `COOKIE_SECRET` | `trendora_cookie_secret_key_random_hash` |
+   | `CLIENT_URL` | `https://your-frontend-app.vercel.app` *(update once Vercel deploys)* |
+5. Click **Deploy Web Service**. Once deployed, copy your Render URL (e.g. `https://trendora-api.onrender.com`).
+
+---
+
+### ⚡ 2. Deploy Frontend to Vercel
+
+1. Log in to [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. Import your GitHub repository: `Aman5ingh19/Trendora-Fashion-E-Commerce-Platform`.
+3. In the project setup screen:
+   - **Root Directory**: Click edit and choose `frontend`.
+   - **Framework Preset**: `Angular`.
+   - **Build Command**: `npm run build` (or leave default).
+   - **Output Directory**: `dist/frontend/browser`.
+4. Update `frontend/src/environments/environment.prod.ts` with your live Render backend URL:
+   ```typescript
+   export const environment = {
+     production: true,
+     apiUrl: 'https://trendora-api.onrender.com/api' // Replace with your Render URL
+   };
+   ```
+5. Click **Deploy**. Vercel will automatically build the standalone Angular application and route all SPA routes via `vercel.json`.
+6. Once deployed, copy your Vercel URL and paste it into the `CLIENT_URL` environment variable in your Render backend settings!
 
 ---
 

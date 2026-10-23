@@ -58,6 +58,9 @@ export class AuthService {
       tap(res => {
         if (res.success && res.user) {
           this.currentUser.set(res.user);
+          if (res.token) {
+            try { localStorage.setItem('trendora_token', res.token); } catch {}
+          }
         }
       })
     );
@@ -70,12 +73,16 @@ export class AuthService {
       tap(res => {
         if (res.success && res.user) {
           this.currentUser.set(res.user);
+          if (res.token) {
+            try { localStorage.setItem('trendora_token', res.token); } catch {}
+          }
         }
       })
     );
   }
 
   logout(): Observable<{ success: boolean }> {
+    try { localStorage.removeItem('trendora_token'); } catch {}
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/logout`, {}, {
       withCredentials: true
     }).pipe(

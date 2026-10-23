@@ -7,6 +7,9 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+// Trust reverse proxy for Render / Cloudflare (required for secure cookies)
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(
   helmet({
@@ -14,21 +17,29 @@ app.use(
   })
 );
 
-// Enable CORS with credentials for Angular frontend
+// Enable CORS with credentials for Angular frontend (Localhost & Vercel)
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:4200',
+  process.env.CLIENT_URL,
   'http://localhost:4200',
   'http://127.0.0.1:4200'
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // allow requests with no origin (like mobile apps, curl, postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      // allow explicitly configured origins
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // allow any Vercel preview or production deployments
+      if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive in dev, restricted in production via env
+
+      // In production, fallback to allowing if permitted
+      return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

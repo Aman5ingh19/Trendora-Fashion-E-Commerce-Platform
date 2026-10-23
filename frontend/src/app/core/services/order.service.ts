@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { Order, DashboardMetrics, Address, Product } from '../models/product.model';
 
 @Injectable({
@@ -8,8 +9,8 @@ import { Order, DashboardMetrics, Address, Product } from '../models/product.mod
 })
 export class OrderService {
   private http = inject(HttpClient);
-  private orderApiUrl = 'http://localhost:5000/api/orders';
-  private adminApiUrl = 'http://localhost:5000/api/admin';
+  private orderApiUrl = `${environment.apiUrl}/orders`;
+  private adminApiUrl = `${environment.apiUrl}/admin`;
 
   // Customer Order Operations
   createOrder(data: { shippingAddress: Address; paymentMethod?: 'COD' | 'ONLINE' }): Observable<{ success: boolean; message: string; order: Order }> {

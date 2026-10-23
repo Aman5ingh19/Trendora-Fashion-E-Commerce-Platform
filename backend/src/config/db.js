@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 let memoryServer = null;
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/trendora_db';
-  const allowMemoryFallback = process.env.USE_MEMORY_DB_IF_LOCAL_FAILS === 'true' || process.env.NODE_ENV === 'test';
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trendora_db';
+  const allowMemoryFallback = (process.env.USE_MEMORY_DB_IF_LOCAL_FAILS === 'true' || process.env.NODE_ENV === 'test') && process.env.NODE_ENV !== 'production';
 
   try {
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 2500 // quick timeout so we don't hang if no local mongod
+      serverSelectionTimeoutMS: process.env.NODE_ENV === 'production' ? 10000 : 4000
     });
     console.log(`[Database] MongoDB Connected to host: ${conn.connection.host}`);
     return conn;
